@@ -81,7 +81,12 @@ export class WhatsAppService {
       }
 
       if (events['creds.update']) {
-        await this.saveCreds();
+        try {
+          await this.saveCreds();
+        } catch (error) {
+          // Si falla al guardar credenciales (ej. carpeta borrada), no crashear
+          console.error('Error guardando credenciales (ignorable si se está cerrando sesión):', error);
+        }
       }
     });
   }
