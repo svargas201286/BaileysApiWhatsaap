@@ -10,11 +10,16 @@ class WhatsAppController {
      */
     async sendWhatsApp(req, res) {
         try {
-            const { number, message, type, media, filename, caption, instanceId } = req.body;
+            let { number, message, type, media, filename, caption, instanceId, fromNumber, mediatype, instance_id } = req.body;
             const userId = req.user.id;
 
-            if (!number || !type) {
-                return res.status(400).json({ success: false, message: 'Faltan campos requeridos (number, type)' });
+            // Soporte para parámetros legacy de scripts PHP antiguos
+            if (!instanceId && fromNumber) instanceId = fromNumber;
+            if (!instanceId && instance_id) instanceId = instance_id;
+            if (!type && mediatype) type = mediatype;
+
+            if (!number || !type || !instanceId) {
+                return res.status(400).json({ success: false, message: 'Faltan campos requeridos (number, type, instanceId)' });
             }
 
             // Verificar que la instancia pertenece al usuario
@@ -177,6 +182,37 @@ class WhatsAppController {
 
             res.json({ success: true, message: 'Instancia eliminada permanentemente' });
         } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    /**
+     * Envía comprobantes electrónicos (habitualmente PDF + XML)
+     */
+    async sendReceipt(req, res) {
+        try {
+            const { number, instanceId, files } = req.body;
+            const userId = req.user.id;
+
+            if (!number || !instanceId || !files || !Array.isArray(files)) {
+                return res.status(400).json({ success: false, message: 'Faltan campos requeridos o formato de files inválido' });
+            }
+
+            // Verificar propiedad de la instancia
+            const [inst] = await pool.query('SELECT * FROM instances WHERE instance_id = ? AND user_id = ?', [instanceId, userId]);
+            if (inst.length === 0) {
+                return res.status(403).json({ success: false, message: 'No tienes acceso a esta instancia' });
+            }
+
+            const results = await whatsappService.sendReceipt(instanceId, number, files);
+
+            res.json({
+                success: true,
+                message: `${files.length} documentos enviados correctamente`,
+                results
+            });
+        } catch (error) {
+            console.error('Error en sendReceipt:', error);
             res.status(500).json({ success: false, message: error.message });
         }
     }

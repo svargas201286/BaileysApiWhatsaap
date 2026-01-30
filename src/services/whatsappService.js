@@ -1,6 +1,8 @@
 import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, useMultiFileAuthState } from 'baileys';
 import P from 'pino';
 import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
 import qrcode from 'qrcode-terminal';
 const logger = P({ level: 'debug' });
 
@@ -247,6 +249,50 @@ export class WhatsAppService {
             qrTimestamp: instance.qrTimestamp,
             phoneNumber: instance.phoneNumber
         } : null;
+    }
+
+    /**
+     * Descarga un archivo desde una URL y lo devuelve como base64
+     */
+    async downloadFile(url) {
+        try {
+            const response = await axios.get(url, { responseType: 'arraybuffer' });
+            return Buffer.from(response.data).toString('base64');
+        } catch (error) {
+            console.error('Error downloading file:', error.message);
+            throw new Error(`No se pudo descargar el archivo de la URL: ${url}`);
+        }
+    }
+
+    /**
+     * Envía un comprobante (habitualmente PDF + XML)
+     */
+    async sendReceipt(instanceId, number, files) {
+        const instance = this.instances.get(instanceId);
+        if (!instance || !instance.sock) throw new Error('Instancia no inicializada');
+
+        const results = [];
+        for (const file of files) {
+            let base64 = file.media;
+
+            // Si es una URL, descargar primero
+            if (file.type === 'url') {
+                base64 = await this.downloadFile(file.media);
+            }
+
+            const res = await this.sendDocument(
+                instanceId,
+                number,
+                base64,
+                file.filename,
+                file.caption
+            );
+            results.push(res);
+
+            // Pequeño retraso entre archivos para evitar bloqueos
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+        return results;
     }
 }
 

@@ -36,4 +36,10 @@ router.post('/delete-instance', (req, res) => {
     whatsappController.deleteInstance(req, res);
 });
 
+// Endpoint especializado para comprobantes (PDF + XML)
+router.post('/send-receipt', (req, res) => {
+    whatsappController.sendReceipt(req, res);
+});
+
+
 export default router;
