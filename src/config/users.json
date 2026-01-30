@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "email": "samuelvargas201286@gmail.com",
+      "name": "Samuel Vargas",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW11ZWx2YXJnYXMyMDEyODYiLCJlbWFpbCI6InNhbXVlbHZhcmdhczIwMTI4NkBnbWFpbC5jb20iLCJyb2xlIjoiYm9zcyJ9.FqciVA649JnhYV4-JnQwor3m7cFaOxv5fWWPTn8Gy0g",
+      "plan": "Premium",
+      "license": "Activa",
+      "expireAt": "2027-01-30"
+    }
+  ]
+}

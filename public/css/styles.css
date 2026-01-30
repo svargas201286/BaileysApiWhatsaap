@@ -352,3 +352,212 @@ body {
 #testForm {
   width: 100%;
 }
+
+/* Data Table Styles */
+.data-table-container {
+  width: 100%;
+  overflow: visible;
+  /* Change from auto to visible to avoid clipping dropdowns */
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  min-height: 200px;
+  /* Ensure 1-2 rows have room for dropdowns */
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background-color: #f9fafb;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.data-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1rem;
+  width: 450px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-20px);
+  transition: all 0.3s;
+}
+
+.modal-overlay.active .modal-content {
+  transform: translateY(0);
+}
+
+.modal-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-add {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sub-menu {
+  display: none;
+  /* Inicia oculto */
+  overflow: hidden;
+  transition: all 0.3s ease-out;
+}
+
+.sub-menu.active {
+  display: flex;
+}
+
+.nav-item.has-submenu .arrow {
+  transition: transform 0.3s;
+}
+
+.nav-item.has-submenu.open .arrow {
+  transform: rotate(180deg);
+}
+
+.view-section {
+  display: none;
+}
+
+.view-section.active {
+  display: block;
+}
+
+/* Session Status Badges */
+.status-badge.session-open {
+  background: #dcfce7;
+  color: #16a34a;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.status-badge.session-closed {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* Actions Dropdown */
+.actions-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-actions {
+  background: none;
+  border: none;
+  color: #6366f1;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background-color: #fff;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+.dropdown-content a {
+  color: #475569;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.dropdown-content a:hover {
+  background-color: #f8fafc;
+  color: #6366f1;
+}
+
+.actions-dropdown.active .dropdown-content {
+  display: block;
+}
+
+.data-table th i {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.data-table th i:hover {
+  color: var(--primary-color);
+}
+
+.token-id {
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  color: #475569;
+}

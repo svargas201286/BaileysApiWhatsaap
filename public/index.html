@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API WhatsApp - Dashboard</title>
+    <title>willayAPI - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,8 +15,8 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-container">
-                <i class="fa-solid fa-bolt" style="color: #6366f1; font-size: 24px;"></i>
-                <span class="brand-name">Factiliza</span>
+                <i class="fa-solid fa-bolt" style="color: var(--primary-color); font-size: 24px;"></i>
+                <span class="brand-name">willay<span style="font-weight: 800;">API</span></span>
             </div>
             
             <nav class="nav-menu">
@@ -30,14 +30,15 @@
                     <span>API Facturación</span>
                     <i class="fa-solid fa-chevron-right arrow"></i>
                 </div>
-                <div class="nav-item active">
+                <!-- API WhatsApp Accordion -->
+                <div class="nav-item has-submenu open" id="navWhatsApp">
                     <i class="fa-solid fa-phone"></i>
                     <span>API WhatsApp</span>
                     <i class="fa-solid fa-chevron-down arrow"></i>
                 </div>
-                <div class="sub-menu">
-                    <div class="sub-item active">Token</div>
-                    <div class="sub-item">Dispositivos</div>
+                <div class="sub-menu active" id="subMenuWhatsApp">
+                    <div class="sub-item" data-view="token">Token</div>
+                    <div class="sub-item active" data-view="dispositivos">Dispositivos</div>
                 </div>
                 <div class="nav-item">
                     <i class="fa-regular fa-credit-card"></i>
@@ -65,101 +66,240 @@
             </header>
 
             <div class="content-wrapper">
-                <!-- Status & QR Section -->
-                <div class="grid-container">
-                    
-                    <!-- Token / Connection Status Card -->
-                    <div class="card status-card">
-                        <div class="card-header">
-                            <h3>Estado de Conexión</h3>
-                            <span class="status-badge" id="connectionStatus">Desconectado</span>
-                        </div>
-                        <div class="card-body">
-                            <div id="qrContainer" class="qr-container">
-                                <div id="qrcode"></div>
-                                <p class="qr-instruction">Escanea el código QR con tu WhatsApp</p>
-                            </div>
-                            <div id="connectedState" class="connected-state" style="display: none;">
-                                <i class="fa-brands fa-whatsapp success-icon"></i>
-                                <p>¡WhatsApp Conectado exitosamente!</p>
-                                <button id="btnLogout" class="btn btn-danger">Cerrar Sesión</button>
-                            </div>
-                            <div id="loader" class="loader" style="display: none;"></div>
-                        </div>
-                        <div class="card-footer">
-                            <a href="#" class="doc-link">Documentación oficial <i class="fa-solid fa-arrow-right"></i></a>
+                
+                <!-- VIEW: Dispositivos -->
+                <div id="view-dispositivos" class="view-section active">
+                    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="font-weight: 600;">Dispositivos</h2>
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn-add" id="btnAddDevice">
+                                <i class="fa-solid fa-plus"></i> Agregar
+                            </button>
+                            <button class="btn-secondary" style="background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                Exportar en Excel
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Test Message Card -->
-                    <div class="card test-card">
-                        <div class="card-header">
-                            <h3>Envie aquí su mensaje de prueba</h3>
+                    <!-- Table Tools -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            Mostrar 
+                            <select style="padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 5px;">
+                                <option>10</option>
+                                <option>25</option>
+                                <option>50</option>
+                            </select> 
+                            registros
                         </div>
-                        <div class="card-body">
-                            <div class="tabs">
-                                <div class="tab active" data-tab="text">Texto</div>
-                                <div class="tab" data-tab="media">Media</div>
-                                <div class="tab" data-tab="document">Documento</div>
-                            </div>
-                            
-                            <form id="testForm">
-                                <input type="hidden" id="messageType" value="text">
-
-                                <div class="form-group">
-                                    <label>Enviar desde:</label>
-                                    <select class="form-control" disabled>
-                                        <option>Seleccionar dispositivo...</option>
-                                        <option selected>Primary Instance</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Número de destino:</label>
-                                    <input type="text" id="testNumber" class="form-control" placeholder="51988888888" required>
-                                </div>
-
-                                <!-- Tab Content: Text -->
-                                <div id="tabContent-text" class="tab-content">
-                                    <div class="form-group">
-                                        <label>Mensaje:</label>
-                                        <textarea id="testMessage" class="form-control" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-                                </div>
-
-                                <!-- Tab Content: Media -->
-                                <div id="tabContent-media" class="tab-content" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Imagen:</label>
-                                        <input type="file" id="mediaFile" class="form-control" accept="image/*,video/*">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Mensaje (opcional):</label>
-                                        <textarea id="mediaCaption" class="form-control" rows="2" placeholder="Descripción de la imagen..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Enviar Media</button>
-                                </div>
-
-                                <!-- Tab Content: Document -->
-                                <div id="tabContent-document" class="tab-content" style="display: none;">
-                                    <div class="form-group">
-                                        <label>Documento PDF:</label>
-                                        <input type="file" id="documentFile" class="form-control" accept=".pdf,.xml,.txt">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Mensaje (opcional):</label>
-                                        <textarea id="documentCaption" class="form-control" rows="2" placeholder="Descripción del documento..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Enviar Documento</button>
-                                </div>
-                            </form>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            Buscar 
+                            <input type="text" placeholder="Buscar ..." style="padding: 8px 15px; border: 1px solid #cbd5e1; border-radius: 5px; min-width: 250px;">
                         </div>
                     </div>
 
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NOMBRE <i class="fa-solid fa-sort" onclick="app.sortTable(0)"></i></th>
+                                    <th>TELEFONO <i class="fa-solid fa-sort" onclick="app.sortTable(1)"></i></th>
+                                    <th>FECHA CREACION <i class="fa-solid fa-sort" onclick="app.sortTable(2)"></i></th>
+                                    <th>INSTANCIA <i class="fa-solid fa-sort" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.5;"></i></th>
+                                    <th>ESTADO <i class="fa-solid fa-sort" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.5;"></i></th>
+                                    <th>ACCIONES <i class="fa-solid fa-sort" style="font-size: 0.7rem; margin-left: 5px; opacity: 0.5;"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="devicesTableBody">
+                                <!-- Se llena dinámicamente -->
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-light); padding: 2rem;">Cargando dispositivos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--text-light); font-size: 0.9rem;" id="tableFooterStatus">
+                        0 registros en total
+                    </div>
                 </div>
+
+                <!-- VIEW: Token -->
+                <div id="view-token" class="view-section">
+                    <div style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem;">
+                        
+                        <!-- Columna Izquierda: Token y Form -->
+                        <div style="display: flex; flex-direction: column; gap: 2rem;">
+                            <!-- Token Card -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Token</h3>
+                                    <button class="btn-add" id="btnCopyToken" style="background: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 4px 12px;">
+                                        Copiar <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="tokenDisplay" style="word-break: break-all; color: var(--text-light); font-size: 0.85rem; background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); min-height: 80px;">
+                                        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTMILCJodW1hbiI6true...
+                                    </div>
+                                    <div style="margin-top: 1.5rem;">
+                                        <a href="#" class="doc-link">Documentación oficial <i class="fa-solid fa-arrow-right"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Test Message Card (Updated style to match screenshot) -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Envie aquí su mensaje</h3>
+                                </div>
+                                <div class="card-body" style="align-items: flex-start;">
+                                    <div class="tabs">
+                                        <div class="tab active" data-tab="text">Texto</div>
+                                        <div class="tab" data-tab="media">Media</div>
+                                        <div class="tab" data-tab="document">Documento</div>
+                                    </div>
+                                    
+                                    <form id="testForm" style="width: 100%;">
+                                        <input type="hidden" id="messageType" value="text">
+                                        
+                                        <div class="form-group">
+                                            <label>Enviar desde:</label>
+                                            <select class="form-control" id="instanceSelect">
+                                                <option value="">Seleccionar dispositivo...</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Número de destino:</label>
+                                            <input type="text" id="testNumber" class="form-control" placeholder="51988888888" required>
+                                        </div>
+
+                                        <div id="tabContent-text" class="tab-content" style="width: 100%;">
+                                            <div class="form-group">
+                                                <label>Mensaje:</label>
+                                                <textarea id="testMessage" class="form-control" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" id="btnSendText">Enviar Mensaje</button>
+                                        </div>
+                                        
+                                        <div id="tabContent-media" class="tab-content" style="display: none; width: 100%;">
+                                            <div class="form-group">
+                                                <label>Imagen:</label>
+                                                <input type="file" id="mediaFile" class="form-control" accept="image/*">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Mensaje (opcional):</label>
+                                                <textarea id="mediaCaption" class="form-control" rows="3" placeholder="Descripción de la imagen..."></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" id="btnSendMedia">Enviar Media</button>
+                                        </div>
+
+                                        <div id="tabContent-document" class="tab-content" style="display: none; width: 100%;">
+                                            <div class="form-group">
+                                                <label>Documento PDF:</label>
+                                                <input type="file" id="docFile" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Mensaje (opcional):</label>
+                                                <textarea id="docCaption" class="form-control" rows="3" placeholder="Descripción del documento..."></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary" id="btnSendDoc">Enviar Documento</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna Derecha: Datos Generales y QR -->
+                        <div style="display: flex; flex-direction: column; gap: 2rem;">
+                            <!-- Datos Generales Card -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Datos generales</h3>
+                                    <i class="fa-regular fa-circle-question" style="color: var(--text-light);"></i>
+                                </div>
+                                <div class="card-body" style="align-items: flex-start; padding: 1.5rem;">
+                                    <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <i class="fa-solid fa-box" style="color: var(--primary-color); width: 20px;"></i>
+                                                <span style="font-size: 0.9rem;">Plan</span>
+                                            </div>
+                                            <span style="font-weight: 600; font-size: 0.9rem;">Gratuito</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <i class="fa-regular fa-calendar" style="color: #10b981; width: 20px;"></i>
+                                                <span style="font-size: 0.9rem;">Fecha licencia</span>
+                                            </div>
+                                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-light);">28/10/2024</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <i class="fa-regular fa-calendar-xmark" style="color: #f59e0b; width: 20px;"></i>
+                                                <span style="font-size: 0.9rem;">Fecha vencimiento</span>
+                                            </div>
+                                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-light);">27/02/2025</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <i class="fa-regular fa-clock" style="color: #6366f1; width: 20px;"></i>
+                                                <span style="font-size: 0.9rem;">Fecha última consulta</span>
+                                            </div>
+                                            <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-light);">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- QR Status Card (Moved here for better layout) -->
+                            <div class="card status-card">
+                                <div class="card-header">
+                                    <h3>Estado WhatsApp</h3>
+                                    <span class="status-badge" id="connectionStatus">Desconectado</span>
+                                </div>
+                                <div class="card-body">
+                                    <div id="qrContainer" class="qr-container">
+                                        <div id="qrcode"></div>
+                                        <p class="qr-instruction">Selecciona una instancia para ver QR</p>
+                                    </div>
+                                    <div id="connectedState" class="connected-state" style="display: none;">
+                                        <i class="fa-brands fa-whatsapp success-icon"></i>
+                                        <p>Conectado</p>
+                                        <button id="btnLogout" class="btn btn-danger" style="margin-top: 1rem;">Cerrar Sesión</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
-    <script src="js/app.js?v=2.1"></script>
+
+    <!-- Modal: Agregar Dispositivo -->
+    <div class="modal-overlay" id="modalAddDevice">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Nuevo Dispositivo</h3>
+                <i class="fa-solid fa-xmark" style="cursor: pointer;" id="btnCancelAdd"></i>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre del Dispositivo:</label>
+                    <input type="text" id="newInstanceName" class="form-control" placeholder="Ej: Ventas Lima">
+                </div>
+                <div class="form-group">
+                    <label>ID de Instancia (Único):</label>
+                    <input type="text" id="newInstanceId" class="form-control" placeholder="Ej: ventas_01">
+                </div>
+                <button class="btn btn-primary" id="btnConfirmAdd">Crear e Inicializar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=3.0"></script>
 </body>
 </html>
