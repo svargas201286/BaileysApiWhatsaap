@@ -275,6 +275,7 @@ class WhatsAppDashboard {
 
     this.elements.devicesTableBody.innerHTML = instances.map(inst => {
       const isConnected = inst.status === 'connected';
+      const isQrLimitReached = inst.status === 'qr_limit_reached';
       const statusClass = isConnected ? 'session-open' : 'session-closed';
       const statusText = isConnected ? 'Sesión abierta' : 'Sesión cerrada';
       const formattedDate = inst.createdAt ? new Date(inst.createdAt).toLocaleString('es-PE', {
@@ -302,6 +303,10 @@ class WhatsAppDashboard {
                                 ${isConnected ? `
                                   <a onclick="app.handleLogout('${inst.id}'); app.closeAllDropdowns();" style="color: #64748b;">
                                       <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+                                  </a>
+                                ` : isQrLimitReached ? `
+                                  <a onclick="app.restartInstance('${inst.id}'); app.closeAllDropdowns();" style="color: #f59e0b;">
+                                      <i class="fa-solid fa-rotate-right"></i> Reiniciar sesión
                                   </a>
                                 ` : `
                                   <a onclick="app.initInstance('${inst.id}'); app.closeAllDropdowns();">
@@ -354,7 +359,8 @@ class WhatsAppDashboard {
       'qr_ready': 'Esperando QR',
       'connecting': 'Conectando...',
       'logged_out': 'Sesión cerrada',
-      'disconnected': 'Sesión cerrada'
+      'disconnected': 'Sesión cerrada',
+      'qr_limit_reached': 'Límite QR alcanzado'
     };
     return map[status] || status;
   }
@@ -412,6 +418,40 @@ class WhatsAppDashboard {
     if (status === 'connected') {
       this.elements.qrContainer.style.display = 'none';
       this.elements.connectedState.style.display = 'flex';
+      this.stopQrCountdown();
+    } else if (status === 'qr_limit_reached') {
+      // Estado especial: límite de QR alcanzado
+      this.elements.connectedState.style.display = 'none';
+      this.elements.qrContainer.style.display = 'flex';
+      this.elements.qrcode.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 4rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+          <h3 style="color: var(--text-color); margin-bottom: 0.5rem;">Límite de intentos alcanzado</h3>
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Se generaron 3 códigos QR sin escanear. Para reintentar, haz clic en el botón de abajo.
+          </p>
+          <button class="btn btn-primary" onclick="app.restartInstance('${this.selectedInstanceId}')" style="background-color: #f59e0b;">
+            <i class="fa-solid fa-rotate-right"></i> Reiniciar sesión
+          </button>
+        </div>
+      `;
+      this.stopQrCountdown();
+    } else if (status === 'disconnected' || status === 'logged_out') {
+      // Estado desconectado: mostrar botón para iniciar sesión
+      this.elements.connectedState.style.display = 'none';
+      this.elements.qrContainer.style.display = 'flex';
+      this.elements.qrcode.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <i class="fa-solid fa-power-off" style="font-size: 4rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+          <h3 style="color: var(--text-color); margin-bottom: 0.5rem;">Sesión cerrada</h3>
+          <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+            Esta instancia no tiene una sesión activa. Haz clic en el botón para iniciar sesión.
+          </p>
+          <button class="btn btn-primary" onclick="app.initInstance('${this.selectedInstanceId}')">
+            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+          </button>
+        </div>
+      `;
       this.stopQrCountdown();
     } else {
       this.elements.connectedState.style.display = 'none';
@@ -517,6 +557,48 @@ class WhatsAppDashboard {
     }
   }
 
+  async restartInstance(instanceId) {
+    if (!instanceId) return;
+
+    const inst = this.instances.find(i => i.id === instanceId);
+    const name = inst ? inst.name : instanceId;
+
+    const result = await Swal.fire({
+      title: '¿Reiniciar sesión?',
+      text: `Se reiniciará la sesión de WhatsApp en: ${name}. Esto reseteará el contador de QR.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#f59e0b',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Sí, reiniciar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        this.Toast.fire({ icon: 'info', title: 'Reiniciando dispositivo...' });
+        const res = await fetch('/api/restart-instance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiToken}`
+          },
+          body: JSON.stringify({ instanceId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          this.Toast.fire({ icon: 'success', title: 'Sesión reiniciada. Generando QR...' });
+          this.selectForToken(instanceId);
+        } else {
+          Swal.fire('Error', data.message, 'error');
+        }
+      } catch (err) {
+        console.error('Error restart instance:', err);
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+  }
+
   async handleLogout(instanceId) {
     if (!instanceId) return;
     const inst = this.instances.find(i => i.id === instanceId);
@@ -548,7 +630,7 @@ class WhatsAppDashboard {
           this.Toast.fire({ icon: 'success', title: 'Sesión cerrada' });
           this.fetchInstances();
           if (this.selectedInstanceId === instanceId) {
-            this.updateStatus(); // Refresh current status view
+            this.fetchStatus(instanceId); // Refresh current status view
           }
         } else {
           Swal.fire('Error', data.message, 'error');

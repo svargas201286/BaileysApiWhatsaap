@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - willayAPI</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -36,8 +37,8 @@
             text-align: center;
         }
 
-        .logo { font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 2rem; }
-        .logo strong { color: #333; }
+        .logo { margin-bottom: 2rem; display: flex; justify-content: center; }
+        .logo img { height: 48px; width: auto; }
 
         .form-group { margin-bottom: 1.5rem; text-align: left; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; }
@@ -72,7 +73,7 @@
 </head>
 <body>
     <div class="auth-container">
-        <div class="logo">willay<strong>API</strong></div>
+        <div class="logo"><img src="images/willayapi-logo.svg" alt="WillayAPI"></div>
         <h2 style="margin-bottom: 1.5rem; color: #1e293b;">Crea tu cuenta</h2>
         
         <form id="registerForm">

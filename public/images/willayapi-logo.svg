@@ -1,0 +1,11 @@
+<svg width="240" height="50" viewBox="0 0 240 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lightning bolt - main purple part -->
+  <path d="M22 8L12 25H18L16 42L28 23H22L24 10L22 8Z" fill="#6366F1"/>
+  
+  <!-- Lightning bolt - green accent (more visible) -->
+  <path d="M20 18L18 23H16L18 18H20Z" fill="#25D366"/>
+  <path d="M24 28L22 32H20L22 28H24Z" fill="#25D366"/>
+  
+  <!-- WillayAPI text -->
+  <text x="40" y="35" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#6366F1">WillayAPI</text>
+</svg>

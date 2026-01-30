@@ -10,7 +10,8 @@ export class WhatsAppService {
     instances = new Map(); // instanceId -> socket info
 
     constructor() {
-        // Inicializar instancias existentes al arrancar
+        // Auto-cargar solo sesiones que YA están conectadas
+        // Las sesiones sin conectar requieren QR manual
         this.loadExistingInstances();
     }
 
@@ -22,20 +23,34 @@ export class WhatsAppService {
         for (const folder of folders) {
             const folderPath = `${authPath}/${folder}`;
             if (fs.lstatSync(folderPath).isDirectory()) {
-                let name = folder;
-                let createdAt = new Date().toISOString();
-
-                const metaPath = `${folderPath}/metadata.json`;
-                if (fs.existsSync(metaPath)) {
+                // Solo cargar si tiene credenciales válidas (sesión ya iniciada)
+                const credsPath = `${folderPath}/creds.json`;
+                if (fs.existsSync(credsPath)) {
                     try {
-                        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-                        name = meta.name || name;
-                        createdAt = meta.createdAt || createdAt;
-                    } catch (e) { console.error("Error reading metadata", e); }
-                }
+                        const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+                        // Solo auto-inicializar si tiene sesión activa (me existe)
+                        if (creds.me && creds.me.id) {
+                            let name = folder;
+                            let createdAt = new Date().toISOString();
 
-                console.log(`Cargando instancia guardada: ${folder}`);
-                this.initializeInstance(folder, name, createdAt);
+                            const metaPath = `${folderPath}/metadata.json`;
+                            if (fs.existsSync(metaPath)) {
+                                try {
+                                    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+                                    name = meta.name || name;
+                                    createdAt = meta.createdAt || createdAt;
+                                } catch (e) { console.error("Error reading metadata", e); }
+                            }
+
+                            console.log(`✅ Cargando sesión activa: ${folder} (${creds.me.id.split(':')[0]})`);
+                            this.initializeInstance(folder, name, createdAt);
+                        } else {
+                            console.log(`⏸️  Sesión sin conectar: ${folder} - requiere QR manual`);
+                        }
+                    } catch (e) {
+                        console.error(`Error leyendo credenciales de ${folder}:`, e);
+                    }
+                }
             }
         }
     }
@@ -89,6 +104,8 @@ export class WhatsAppService {
             id: instanceId,
             sock,
             qrCode: undefined,
+            qrAttempts: 0,
+            maxQrAttempts: 3,
             connectionState: 'connecting',
             phoneNumber: state.creds?.me?.id?.split(':')[0] || null,
             name: metadata.name,
@@ -108,11 +125,18 @@ export class WhatsAppService {
                 }
 
                 if (qr) {
+                    instanceData.qrAttempts = (instanceData.qrAttempts || 0) + 1;
                     instanceData.qrCode = qr;
                     instanceData.qrTimestamp = Date.now();
                     instanceData.connectionState = 'qr_ready';
                     instanceData.isInitializing = false;
-                    console.log(`[${instanceId}] QR ready`);
+                    console.log(`[${instanceId}] QR ready (intento ${instanceData.qrAttempts}/${instanceData.maxQrAttempts})`);
+
+                    // Si alcanzó el límite de intentos, marcar para no reconectar
+                    if (instanceData.qrAttempts >= instanceData.maxQrAttempts) {
+                        console.log(`[${instanceId}] ⚠️  Límite de intentos QR alcanzado. Requiere inicio manual.`);
+                        instanceData.qrLimitReached = true;
+                    }
                 }
 
                 if (connection === 'close') {
@@ -121,17 +145,35 @@ export class WhatsAppService {
                     const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
                     console.log(`[${instanceId}] Connection closed (${statusCode}). Reconnecting:`, shouldReconnect);
 
+                    // No reconectar si alcanzó el límite de QR
+                    if (instanceData.qrLimitReached) {
+                        console.log(`[${instanceId}] ⛔ No se reconectará automáticamente. Límite de QR alcanzado.`);
+                        instanceData.connectionState = 'qr_limit_reached';
+                        instanceData.qrCode = undefined;
+                        sock.ev.removeAllListeners();
+                        return;
+                    }
+
                     if (shouldReconnect) {
                         instanceData.connectionState = 'connecting';
                         // Essential cleanup before reconnection
                         sock.ev.removeAllListeners();
                         setTimeout(() => this.initializeInstance(instanceId, instanceData.name, instanceData.createdAt), 3000);
                     } else {
+                        // Desvinculado desde el celular - mantener en memoria pero marcar como logged_out
+                        console.log(`[${instanceId}] 📱 Sesión desvinculada desde WhatsApp. Limpiando credenciales...`);
                         instanceData.connectionState = 'logged_out';
                         instanceData.qrCode = undefined;
                         instanceData.phoneNumber = null;
-                        this.instances.delete(instanceId);
+                        instanceData.qrAttempts = 0; // Resetear contador
+                        instanceData.qrLimitReached = false;
+                        sock.ev.removeAllListeners();
+
+                        // Eliminar carpeta de autenticación para forzar nuevo QR
                         await this.removeAuthFolder(instanceId);
+
+                        // NO eliminar de memoria - mantener para que el usuario pueda reiniciar
+                        // this.instances.delete(instanceId); // ❌ Comentado
                     }
                 } else if (connection === 'open') {
                     instanceData.connectionState = 'connected';
@@ -229,6 +271,28 @@ export class WhatsAppService {
         } catch (error) {
             console.error('Error eliminando carpeta:', error);
         }
+    }
+
+    /**
+     * Reinicia manualmente una instancia (resetea contador de QR)
+     */
+    async restartInstance(instanceId, name = null) {
+        const instance = this.instances.get(instanceId);
+
+        // Cerrar conexión existente si la hay
+        if (instance && instance.sock) {
+            try {
+                instance.sock.ws.close();
+                instance.sock.ev.removeAllListeners();
+            } catch (e) {
+                console.log(`Error cerrando socket de ${instanceId}:`, e.message);
+            }
+            this.instances.delete(instanceId);
+        }
+
+        // Reinicializar desde cero (resetea contador de QR)
+        console.log(`🔄 Reiniciando instancia ${instanceId} manualmente...`);
+        return await this.initializeInstance(instanceId, name);
     }
 
     getAllInstances() {

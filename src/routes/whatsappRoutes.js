@@ -36,6 +36,11 @@ router.post('/delete-instance', (req, res) => {
     whatsappController.deleteInstance(req, res);
 });
 
+// Endpoint para reiniciar instancia (resetea contador QR)
+router.post('/restart-instance', (req, res) => {
+    whatsappController.restartInstance(req, res);
+});
+
 // Endpoint especializado para comprobantes (PDF + XML)
 router.post('/send-receipt', (req, res) => {
     whatsappController.sendReceipt(req, res);

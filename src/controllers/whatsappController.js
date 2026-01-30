@@ -80,6 +80,30 @@ class WhatsAppController {
     }
 
     /**
+     * Reinicia una instancia (resetea contador de QR)
+     */
+    async restartInstance(req, res) {
+        try {
+            const { instanceId } = req.body;
+            const userId = req.user.id;
+
+            if (!instanceId) return res.status(400).json({ success: false, message: 'ID de instancia requerido' });
+
+            // Verificar propiedad
+            const [inst] = await pool.query('SELECT * FROM instances WHERE instance_id = ? AND user_id = ?', [instanceId, userId]);
+            if (inst.length === 0) {
+                return res.status(403).json({ success: false, message: 'No tienes acceso a esta instancia' });
+            }
+
+            await whatsappService.restartInstance(instanceId, inst[0].name);
+            res.json({ success: true, message: `Instancia ${instanceId} reiniciada. Generando nuevo QR...` });
+        } catch (error) {
+            console.error('Error al reiniciar instancia:', error);
+            res.status(500).json({ success: false, message: 'Error al reiniciar instancia' });
+        }
+    }
+
+    /**
      * Obtiene todas las instancias del usuario autenticado
      */
     async getInstances(req, res) {
@@ -121,10 +145,13 @@ class WhatsAppController {
         let status = whatsappService.getInstanceStatus(instanceId);
 
         if (!status) {
-            // Si no está en memoria, la inicializamos automáticamente en segundo plano
-            // No usamos await para no bloquear la respuesta
-            whatsappService.initializeInstance(instanceId, inst[0].name);
-            return res.json({ status: 'connecting', qr: null, phoneNumber: inst[0].phone, message: 'Inicializando instancia...' });
+            // La instancia no está activa, devolver estado desconectado
+            return res.json({
+                status: 'disconnected',
+                qr: null,
+                phoneNumber: inst[0].phone,
+                message: 'Instancia no iniciada. Haz clic en "Inicializar" para conectar.'
+            });
         }
 
         // Si se acaba de conectar y no tenemos el teléfono en DB, actualizarlo
