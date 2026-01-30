@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API WhatsApp - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="fa-solid fa-bolt" style="color: #6366f1; font-size: 24px;"></i>
+                <span class="brand-name">Factiliza</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item">
+                    <i class="fa-solid fa-cube"></i>
+                    <span>API Consulta</span>
+                    <i class="fa-solid fa-chevron-right arrow"></i>
+                </div>
+                <div class="nav-item">
+                    <i class="fa-solid fa-server"></i>
+                    <span>API Facturación</span>
+                    <i class="fa-solid fa-chevron-right arrow"></i>
+                </div>
+                <div class="nav-item active">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>API WhatsApp</span>
+                    <i class="fa-solid fa-chevron-down arrow"></i>
+                </div>
+                <div class="sub-menu">
+                    <div class="sub-item active">Token</div>
+                    <div class="sub-item">Dispositivos</div>
+                </div>
+                <div class="nav-item">
+                    <i class="fa-regular fa-credit-card"></i>
+                    <span>Métodos de pago</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-bar">
+                <div class="theme-toggle">
+                    <i class="fa-regular fa-moon"></i>
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="username">samuelvargas201286</span>
+                        <span class="email">samuelvargas201286@gmail.com</span>
+                    </div>
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=Samuel+Vargas&background=random" alt="User">
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Status & QR Section -->
+                <div class="grid-container">
+                    
+                    <!-- Token / Connection Status Card -->
+                    <div class="card status-card">
+                        <div class="card-header">
+                            <h3>Estado de Conexión</h3>
+                            <span class="status-badge" id="connectionStatus">Desconectado</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="qrContainer" class="qr-container">
+                                <div id="qrcode"></div>
+                                <p class="qr-instruction">Escanea el código QR con tu WhatsApp</p>
+                            </div>
+                            <div id="connectedState" class="connected-state" style="display: none;">
+                                <i class="fa-brands fa-whatsapp success-icon"></i>
+                                <p>¡WhatsApp Conectado exitosamente!</p>
+                                <button id="btnLogout" class="btn btn-danger">Cerrar Sesión</button>
+                            </div>
+                            <div id="loader" class="loader" style="display: none;"></div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="doc-link">Documentación oficial <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Test Message Card -->
+                    <div class="card test-card">
+                        <div class="card-header">
+                            <h3>Envie aquí su mensaje de prueba</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="tabs">
+                                <div class="tab active" data-tab="text">Texto</div>
+                                <div class="tab" data-tab="media">Media</div>
+                                <div class="tab" data-tab="document">Documento</div>
+                            </div>
+                            
+                            <form id="testForm">
+                                <input type="hidden" id="messageType" value="text">
+
+                                <div class="form-group">
+                                    <label>Enviar desde:</label>
+                                    <select class="form-control" disabled>
+                                        <option>Seleccionar dispositivo...</option>
+                                        <option selected>Primary Instance</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Número de destino:</label>
+                                    <input type="text" id="testNumber" class="form-control" placeholder="51988888888" required>
+                                </div>
+
+                                <!-- Tab Content: Text -->
+                                <div id="tabContent-text" class="tab-content">
+                                    <div class="form-group">
+                                        <label>Mensaje:</label>
+                                        <textarea id="testMessage" class="form-control" rows="4" placeholder="Escribe tu mensaje aquí..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                                </div>
+
+                                <!-- Tab Content: Media -->
+                                <div id="tabContent-media" class="tab-content" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Imagen:</label>
+                                        <input type="file" id="mediaFile" class="form-control" accept="image/*,video/*">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Mensaje (opcional):</label>
+                                        <textarea id="mediaCaption" class="form-control" rows="2" placeholder="Descripción de la imagen..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Enviar Media</button>
+                                </div>
+
+                                <!-- Tab Content: Document -->
+                                <div id="tabContent-document" class="tab-content" style="display: none;">
+                                    <div class="form-group">
+                                        <label>Documento PDF:</label>
+                                        <input type="file" id="documentFile" class="form-control" accept=".pdf,.xml,.txt">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Mensaje (opcional):</label>
+                                        <textarea id="documentCaption" class="form-control" rows="2" placeholder="Descripción del documento..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Enviar Documento</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>
