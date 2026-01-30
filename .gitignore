@@ -1,0 +1,24 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Entorno
+.env
+
+# WhatsApp Auth
+baileys_auth_info/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
