@@ -1,9 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import pool from '../config/db.js';
 
-const usersPath = path.join(process.cwd(), 'src', 'config', 'users.json');
-
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, message: 'No se proporcionó token de acceso' });
@@ -12,8 +9,8 @@ export const authMiddleware = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const userData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-    const user = userData.users.find(u => u.token === token);
+    const [users] = await pool.query('SELECT * FROM users WHERE token = ?', [token]);
+    const user = users[0];
 
     if (!user) {
       return res.status(403).json({ success: false, message: 'Token de acceso inválido' });

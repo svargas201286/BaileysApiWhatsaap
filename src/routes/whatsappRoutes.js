@@ -3,11 +3,6 @@ import { whatsappController } from '../controllers/whatsappController.js';
 import { authMiddleware } from '../middleware/auth.js';
 const router = Router();
 
-// Endpoint para perfil de usuario
-router.get('/profile', (req, res) => {
-    whatsappController.getProfile(req, res);
-});
-
 // Todas las rutas siguientes requieren el token único
 router.use(authMiddleware);
 
@@ -34,6 +29,11 @@ router.post('/instances', (req, res) => {
 // Endpoint para logout
 router.post('/logout', (req, res) => {
     whatsappController.logout(req, res);
+});
+
+// Endpoint para eliminar instancia permanentemente
+router.post('/delete-instance', (req, res) => {
+    whatsappController.deleteInstance(req, res);
 });
 
 export default router;

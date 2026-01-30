@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import whatsappRoutes from './routes/whatsappRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3009;
@@ -12,6 +13,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(process.cwd(), 'public')));
 // Rutas API
+app.use('/api/auth', authRoutes);
 app.use('/api', whatsappRoutes);
 // Ruta de salud básica
 app.get('/health', (req, res) => {

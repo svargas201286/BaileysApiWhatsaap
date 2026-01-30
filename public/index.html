@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>willayAPI - Dashboard</title>
+    <script>
+        if (!localStorage.getItem('willay_token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,9 +45,17 @@
                     <div class="sub-item" data-view="token">Token</div>
                     <div class="sub-item active" data-view="dispositivos">Dispositivos</div>
                 </div>
+                <div class="nav-item sub-item" data-view="documento">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Suscripción</span>
+                </div>
                 <div class="nav-item">
                     <i class="fa-regular fa-credit-card"></i>
                     <span>Métodos de pago</span>
+                </div>
+                <div class="nav-item" id="btnLogoutSession" style="margin-top: auto; color: #ef4444;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Cerrar Sesión</span>
                 </div>
             </nav>
         </aside>
@@ -55,13 +68,15 @@
                     <i class="fa-regular fa-moon"></i>
                 </div>
                 <div class="user-profile">
+                <div class="user-profile">
                     <div class="user-info">
-                        <span class="username">samuelvargas201286</span>
-                        <span class="email">samuelvargas201286@gmail.com</span>
+                        <span class="username" id="headerUserName">...</span>
+                        <span class="email" id="headerUserEmail">...</span>
                     </div>
                     <div class="avatar">
-                        <img src="https://ui-avatars.com/api/?name=Samuel+Vargas&background=random" alt="User">
+                        <img src="" id="headerAvatar" alt="User">
                     </div>
+                </div>
                 </div>
             </header>
 
@@ -254,13 +269,16 @@
 
                             <!-- QR Status Card (Moved here for better layout) -->
                             <div class="card status-card">
-                                <div class="card-header">
-                                    <h3>Estado WhatsApp</h3>
+                                <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+                                    <h3 style="margin-right: auto;">Estado: <span id="selectedInstanceName" style="color: var(--primary-color);">Ninguno</span></h3>
                                     <span class="status-badge" id="connectionStatus">Desconectado</span>
                                 </div>
                                 <div class="card-body">
                                     <div id="qrContainer" class="qr-container">
                                         <div id="qrcode"></div>
+                                        <div id="qrCountdown" class="qr-countdown" style="display: none; margin-top: 10px; font-weight: 600; color: var(--primary-color);">
+                                            El código QR se actualizará en: <span id="timerSeconds">50</span>s
+                                        </div>
                                         <p class="qr-instruction">Selecciona una instancia para ver QR</p>
                                     </div>
                                     <div id="connectedState" class="connected-state" style="display: none;">

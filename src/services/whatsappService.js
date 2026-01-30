@@ -107,6 +107,7 @@ export class WhatsAppService {
 
                 if (qr) {
                     instanceData.qrCode = qr;
+                    instanceData.qrTimestamp = Date.now();
                     instanceData.connectionState = 'qr_ready';
                     instanceData.isInitializing = false;
                     console.log(`[${instanceId}] QR ready`);
@@ -243,6 +244,7 @@ export class WhatsAppService {
         return instance ? {
             status: instance.connectionState,
             qr: instance.qrCode,
+            qrTimestamp: instance.qrTimestamp,
             phoneNumber: instance.phoneNumber
         } : null;
     }
