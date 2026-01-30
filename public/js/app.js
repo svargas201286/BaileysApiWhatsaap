@@ -139,17 +139,34 @@ const app = {
   },
 
   async handleLogout() {
-    if (!confirm('¿Estás seguro que deseas cerrar sesión?')) return;
+    const result = await Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: "¿Estás seguro que deseas desconectar el dispositivo?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, desconectar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
     try {
       const response = await fetch('/api/logout', { method: 'POST' });
       const data = await response.json();
       if (data.success) {
-        alert('Sesión cerrada correctamente');
+        Swal.fire({
+          icon: 'success',
+          title: 'Sesión cerrada',
+          text: 'Te has desconectado correctamente',
+          timer: 2000,
+          showConfirmButton: false
+        });
         this.state.qrCode = null;
         this.showLoader();
       }
     } catch (error) {
-      alert('Error al cerrar sesión');
+      Swal.fire('Error', 'No se pudo cerrar la sesión', 'error');
     }
   },
 
@@ -159,7 +176,7 @@ const app = {
     const type = this.elements.messageTypeInput.value;
 
     if (!number) {
-      alert('Por favor ingresa un número de destino');
+      Swal.fire('Campo requerido', 'Por favor ingresa un número de destino', 'warning');
       return;
     }
 
@@ -214,19 +231,22 @@ const app = {
       if (data.success) {
         console.log('Mensaje enviado con éxito. ID:', data.id);
 
-        // Feedback visual en el botón
-        if (activeTabButton) {
-          activeTabButton.textContent = '¡Mensaje Enviado!';
-          activeTabButton.style.backgroundColor = '#10b981'; // Green success
-          activeTabButton.style.borderColor = '#10b981';
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
 
-          setTimeout(() => {
-            activeTabButton.disabled = false;
-            activeTabButton.textContent = originalText;
-            activeTabButton.style.backgroundColor = '';
-            activeTabButton.style.borderColor = '';
-          }, 3000);
-        }
+        Toast.fire({
+          icon: 'success',
+          title: 'Mensaje enviado correctamente'
+        });
 
         // Limpiar inputs
         this.elements.testMessage.value = '';
@@ -235,7 +255,7 @@ const app = {
         this.elements.mediaCaption.value = '';
         this.elements.documentCaption.value = '';
       } else {
-        alert('Error al enviar: ' + data.message);
+        Swal.fire('Error', data.message || 'No se pudo enviar el mensaje', 'error');
         // Restaurar botón inmediatamente en error
         if (activeTabButton) {
           activeTabButton.disabled = false;
@@ -244,7 +264,7 @@ const app = {
       }
 
     } catch (error) {
-      alert(error.message || 'Error desconocido');
+      Swal.fire('Error de Conexión', error.message || 'Error desconocido al intentar enviar', 'error');
       console.error(error);
     }
   },
